@@ -1,0 +1,21 @@
+name: Continuous Integration
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - id: build-and-test
+        run: |
+          docker run -id quic-sdk-ubuntu >> container_id.out
+          container_id="$(cat container_id.out)"
+          docker exec $container_id git config --global user.name "github-actions"
+          docker exec $container_id git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          docker exec $container_id python3 owt/test/scripts/build.py
+          docker cp $container_id:/workspace/quic/packages/306912b0257df19f0327a46a9d41d88b629826d0.zip .
+          docker stop $container_id
+      - uses: actions/upload-artifact@v2
+        with:
+          name: quic-sdk
+          path: 306912b0257df19f0327a46a9d41d88b629826d0.zip
